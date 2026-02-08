@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Anime Finder Premium</title>
+
+<style>
+body{
+ margin:0;
+ font-family:Arial, sans-serif;
+ background:linear-gradient(180deg,#0b0017,#05000f);
+ color:white;
+}
+
+h1{
+ text-align:center;
+ margin-top:25px;
+ letter-spacing:1px;
+}
+
+.search-box{
+ width:70%;
+ margin:20px auto 5px auto;
+ display:block;
+ padding:14px 18px;
+ border-radius:30px;
+ border:none;
+ background:#22003a;
+ color:white;
+ font-size:16px;
+ box-shadow:0 0 18px #6b00ff40;
+}
+
+#suggestions{
+ width:70%;
+ margin:auto;
+ background:#140028;
+ border-radius:15px;
+ max-height:220px;
+ overflow-y:auto;
+ box-shadow:0 0 18px #6b00ff55;
+}
+
+.suggest-item{
+ padding:10px 14px;
+ cursor:pointer;
+}
+
+.suggest-item:hover{
+ background:#6b00ff40;
+}
+
+.banner{
+ width:80%;
+ height:180px;
+ margin:25px auto;
+ border-radius:20px;
+ background:linear-gradient(120deg,#2b0050,#120020);
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ box-shadow:0 0 30px #6b00ff55;
+}
+
+.banner-text{
+ font-size:26px;
+ font-weight:bold;
+ color:#e0b8ff;
+}
+
+.sidebar{
+ position:fixed;
+ left:-260px;
+ top:0;
+ width:260px;
+ height:100%;
+ background:#130026;
+ padding:20px;
+ transition:left .35s ease;
+ z-index:999;
+}
+
+.sidebar.active{ left:0; }
+
+.menu-btn{
+ position:fixed;
+ top:20px;
+ left:15px;
+ font-size:26px;
+ cursor:pointer;
+ z-index:1000;
+}
+
+.genre-btn{
+ display:block;
+ width:100%;
+ margin:12px 0;
+ padding:12px;
+ border-radius:20px;
+ border:none;
+ background:#2c004f;
+ color:white;
+ cursor:pointer;
+ transition:.25s;
+}
+
+.genre-btn:hover{ background:#6b00ff; }
+
+#results{
+ width:80%;
+ margin:20px auto;
+}
+
+.card{
+ background:#130026;
+ margin:12px 0;
+ padding:16px;
+ border-radius:16px;
+ box-shadow:0 0 18px #6b00ff40;
+}
+
+.card h3{ margin:0 0 6px 0; color:#e0b8ff; }
+.card p{ margin:4px 0; }
+
+/* PROFESSIONAL CONTACT FLOAT */
+.contact{
+ position:fixed;
+ bottom:20px;
+ right:20px;
+ background:rgba(20,0,40,.9);
+ padding:14px 18px;
+ border-radius:18px;
+ box-shadow:0 0 20px #6b00ff55;
+ backdrop-filter:blur(10px);
+}
+
+.contact a{
+ text-decoration:none;
+ color:#e0b8ff;
+ display:block;
+ margin:6px 0;
+ font-size:15px;
+}
+
+.contact a:hover{
+ color:#fff;
+}
+</style>
+</head>
+
+<body>
+
+<div class="menu-btn" onclick="toggleSidebar()">☰</div>
+
+<div class="sidebar" id="sidebar">
+ <h3>Genres</h3>
+ <button class="genre-btn" onclick="genreSearch(1)">Action</button>
+ <button class="genre-btn" onclick="genreSearch(22)">Romance</button>
+ <button class="genre-btn" onclick="genreSearch(10)">Fantasy</button>
+ <button class="genre-btn" onclick="genreSearch(23)">School</button>
+ <button class="genre-btn" onclick="genreSearch(4)">Comedy</button>
+</div>
+
+<h1>TAKE YOUR NEXT ANIME</h1>
+
+<input id="search" class="search-box" placeholder="Search any anime...">
+<div id="suggestions"></div>
+
+<div class="banner">
+ <div class="banner-text">Honourable Anime Picks</div>
+</div>
+
+<div id="results"></div>
+
+<div class="contact">
+ <a href="https://instagram.com/monkeydlufyy_10006" target="_blank">📸 monkeydlufyy_10006</a>
+ <a href="mailto:priyanshsharma1524@gmail.com">✉️ priyanshsharma1524@gmail.com</a>
+</div>
+
+<script>
+const sidebar=document.getElementById('sidebar');
+const input=document.getElementById('search');
+const suggestions=document.getElementById('suggestions');
+const results=document.getElementById('results');
+
+function toggleSidebar(){ sidebar.classList.toggle('active'); }
+
+input.addEventListener('input',async e=>{
+ const q=e.target.value.trim();
+ if(q.length<2){ suggestions.innerHTML=''; return; }
+
+ const res=await fetch(`https://api.jikan.moe/v4/anime?q=${q}&limit=8`);
+ const data=await res.json();
+
+ suggestions.innerHTML=data.data.map(a=>
+  `<div class="suggest-item" onclick="loadAnime('${a.title.replace(/'/g,'')}')">${a.title}</div>`
+ ).join('');
+});
+
+async function loadAnime(name){
+ suggestions.innerHTML='';
+ input.value=name;
+ const res=await fetch(`https://api.jikan.moe/v4/anime?q=${name}&limit=6`);
+ const data=await res.json();
+
+ results.innerHTML=data.data.map(a=>`
+  <div class="card">
+   <h3>${a.title}</h3>
+   <p>Episodes: ${a.episodes||'Unknown'}</p>
+   <p>Score: ${a.score||'N/A'}</p>
+   <p>${a.synopsis?a.synopsis.substring(0,180)+'...':''}</p>
+  </div>
+ `).join('');
+}
+
+async function genreSearch(id){
+ toggleSidebar();
+ results.innerHTML='Loading genre...';
+ const res=await fetch(`https://api.jikan.moe/v4/anime?genres=${id}&order_by=score&sort=desc&limit=8`);
+ const data=await res.json();
+
+ results.innerHTML=data.data.map(a=>`
+  <div class="card">
+   <h3>${a.title}</h3>
+   <p>Score: ${a.score||'N/A'}</p>
+   <p>${a.synopsis?a.synopsis.substring(0,180)+'...':''}</p>
+  </div>
+ `).join('');
+}
+</script>
+
+</body>
+</html>
